@@ -26,5 +26,5 @@ Before starting, ensure you have the following installed:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/sandeepkoovery/task-manager.git
+   git clone https://github.com/sandeepkoovery/mini-task-manager.git
    cd task-manager

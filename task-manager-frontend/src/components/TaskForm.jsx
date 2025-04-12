@@ -1,66 +1,70 @@
-// src/components/TaskForm.jsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import api from '../api';
 
-export default function TaskForm({ onSubmit, taskToEdit, cancelEdit }) {
-  const [form, setForm] = useState({ title: '', description: '', due_date: '', status: 'pending' });
+const TaskSchema = Yup.object().shape({
+  title: Yup.string().required('Title is required'),
+  description: Yup.string().required('Description is required'),
+  due_date: Yup.string().required('Due date is required'),
+});
 
-  useEffect(() => {
-    if (taskToEdit) {
-      setForm({
-        title: taskToEdit.title || '',
-        description: taskToEdit.description || '',
-        due_date: taskToEdit.due_date || '',
-        status: taskToEdit.status || 'pending',
-      });
-    } else {
-      setForm({ title: '', description: '', due_date: '', status: 'pending' });
+export default function TaskForm() {
+  const initialValues = {
+    title: '',
+    description: '',
+    due_date: '',
+    status: 'pending',
+  };
+
+  const handleSubmit = async (values, { resetForm }) => {
+    try {
+      await api.post('/tasks', values);
+      resetForm();
+      window.location.reload(); // optional refresh
+    } catch (err) {
+      console.error('Error submitting task', err);
     }
-  }, [taskToEdit]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(form);
-    setForm({ title: '', description: '', due_date: '', status: 'pending' });
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        className="form-control mb-2"
-        placeholder="Title"
-        value={form.title}
-        onChange={(e) => setForm({ ...form, title: e.target.value })}
-      />
-      <textarea
-        className="form-control mb-2"
-        placeholder="Description"
-        value={form.description}
-        onChange={(e) => setForm({ ...form, description: e.target.value })}
-      />
-      <input
-        type="date"
-        className="form-control mb-2"
-        value={form.due_date}
-        onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-      />
-      <select
-        className="form-control mb-2"
-        value={form.status}
-        onChange={(e) => setForm({ ...form, status: e.target.value })}
-      >
-        <option value="pending">Pending</option>
-        <option value="completed">Completed</option>
-      </select>
+    <Formik
+      initialValues={initialValues}
+      validationSchema={TaskSchema}
+      onSubmit={handleSubmit}
+    >
+      {() => (
+        <Form>
+          <div className="mb-2">
+            <Field name="title" className="form-control" placeholder="Title" />
+            <ErrorMessage name="title" component="div" className="text-danger" />
+          </div>
 
-      <button className="btn btn-primary">
-        {taskToEdit ? 'Update Task' : 'Add Task'}
-      </button>
+          <div className="mb-2">
+            <Field
+              as="textarea"
+              name="description"
+              className="form-control"
+              placeholder="Description"
+            />
+            <ErrorMessage name="description" component="div" className="text-danger" />
+          </div>
 
-      {taskToEdit && (
-        <button type="button" className="btn btn-secondary ms-2" onClick={cancelEdit}>
-          Cancel
-        </button>
+          <div className="mb-2">
+            <Field type="date" name="due_date" className="form-control" />
+            <ErrorMessage name="due_date" component="div" className="text-danger" />
+          </div>
+
+          <div className="mb-2">
+            <Field as="select" name="status" className="form-control">
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </Field>
+          </div>
+
+          <button type="submit" className="btn btn-primary">Add Task</button>
+        </Form>
       )}
-    </form>
+    </Formik>
   );
-}
+} 
